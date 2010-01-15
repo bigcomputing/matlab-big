@@ -1,0 +1,78 @@
+Requirements
+------------
+
+  1) Matlab 7.0 or later
+
+  2) Big server (http://github.com/bigcomputing/big-server)
+  You'll want to have a Big server installed and running on some
+  machine that you can connect to, but it doesn't need to be installed on a
+  client machine.
+
+Unix Installation
+------------------
+
+  First, untar the file:
+
+    % tar xzvf matlab-big.tar.gz
+
+  You can do this as an unpriviledge user, even if you plan to install it as root.
+
+  Second, set MATLABPATH to point to where nws is installed.  
+  You might want to add this in your .bashrc or .cshrc file, so you
+  don't need to retype this for each login.
+
+  For example, if nws is installed in /usr/local/nws:
+
+    % MATLABPATH=/usr/local/nws:$MATLABPATH
+    % export MATLABPATH
+
+  or if you're using a csh-compatible shell:
+
+    % setenv MATLABPATH /usr/local/nws:$MATLABPATH
+
+  Third, if you are planning to use the Sleigh package, 
+  make sure you do the following two steps:
+  1) make sure you can login to the appropriate remote machines using ssh without a password.
+
+  After setting up password-less ssh, you can do a simple test to see if your
+  ssh is setup correctly by typing the following:
+
+    % ssh host date
+
+  If you have setup ssh correctly, this command should display the date on the
+  remote machine without asking for password.
+
+  2) Add the location of MATLAB to PATH or MatlabProg environment variable
+  on all worker nodes.
+  For example,
+   
+   % PATH=/usr/local/matlab/bin:$PATH
+   % export PATH
+   or
+   % MatlabProg=/usr/local/matlab/bin
+   % export MatlabProg
+
+  Note (1): The copy of MATLAB picked up from MatlabProg environment variable supercedes 
+  the copy of MATLAB picked up from the PATH environment variable.
+
+
+Windows Installation
+---------------------
+
+  First, unzip the file
+
+  Second, set MATLABPATH to point to where nws is installed.
+
+  Third, if you will be using the Sleigh package, use web launch instead of ssh
+  launch to start the sleigh workers. For more information on the Sleigh package,
+  please consult the provided tutorials and manual.
+
+
+Mac OS X Installation
+---------------------
+
+  First, mount the disk image file.
+
+  Second, drag the matlab-big directory to the desired location.
+
+  Third, set MATLABPATH to point to the location of matlab-big.

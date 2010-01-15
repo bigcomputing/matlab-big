@@ -1,0 +1,226 @@
+\section {nwsServer Class}
+%HEVEA\aname{nwsServer}{
+\rule[0.1in]{6in}{0.01in}
+\newline
+nwsServer
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	nwsServer class constructor.
+	\item {\bf Usage}\\
+	nwss = nwsServer(h, p)
+	\item {\bf Arguments}
+		\begin{tabbing}
+		h \hspace{2.5cm} \= server host name. Default is `localhost'.\\
+		p \> server port number. Default is 8765.
+		\end{tabbing}
+	\item {\bf Examples}
+	\begin{verbatim}
+	example 1: create a nws server with default options.
+	>> nwss = nwsServer;   % create nws server with default options
+	
+	example 2: create a nws server on node1, port 5000.
+	>> nwss = nwsServer(`node1', 5000);
+	\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{openWs}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+openWs
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Create a netWorkSpace class object. 
+	\item {\bf Usage}\\
+	nws = openWs(nwss, netWorkSpaceName, opts);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nwss \hspace{2.5cm} \= a nwsServer class object. \\
+		netWorkSpaceName \> name of the netWorkSpace to open.\\
+		opts \> a structure of optional fields.
+		\end{tabbing}
+	\item {\bf Details}\\
+	openWs(nwss, netWorkSpaceName) creates a shared netWorkSpace object for
+	the netWorkSpace named netWorkSpaceName (which must be a string). 
+	If the shared netWorkSpace does not exist, it will be created (upon first use)
+	and claimed the ownership of the workspace. This can be useful as an arbitration
+	mechanism. The output of listWss indicates which netWorkSpace this MATLAB process
+	created. These will be destroyed when this MATLAB process closes the connection
+	to the netWorkSpace server that was used to create these spaces, except when 
+        when they are persistent workspaces. \\
+
+	opts argument has two optional fields: 
+	\begin{itemize}
+	\item \textit {persistent}: a boolean value indicating whether the workspace is persistent or not. If
+	the workspace is persistent (value of 1), then the workspace is not purged
+	when the owner disconnects from the server. Default value is 0.
+	\item \textit {space}: a netWorkSpace class object. 
+	If this field is specified, then the existing netWorkSpace and server connection are used. Otherwise, a new netWorkSpace 
+    class object with the connection to the nws server, nwss, is created.
+	\end{itemize}
+	
+	\item {\bf Examples}
+	\begin{verbatim}
+	example 1: open a workspace with default options.
+	>> nwss = nwsServer;
+	>> nws = openWs(nwss, `my space');
+	
+	example 2: open a persistent workspace.
+	>> nws2 = openWs(nwss, `my space2', opt);
+	\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{useWs}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+useWs
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Connect to a shared netWorkSpace, but not own it. 
+	\item {\bf Usage}\\
+	nws = useWs(nwss, netWorkSpaceName, opts);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nwss \hspace{3.0cm} \= a nwsServer class object. \\
+		netWorkSpaceName \> name of the netWorkSpace to open.\\
+		opts \> a structure of optional fields.
+		\end{tabbing}
+	\item {\bf Details}\\
+	useWs(nwss, netWorkSpaceName, opts) creates a shared netWorkSpace object
+	for the netWorkSpace named netWorkSpaceName (which must be a string).
+	If the shared netWorkSpace does not exist, it will be created but no owner
+	associates with it. \\
+	
+	opts argument contains the following field:
+	\begin{itemize}
+	\item \textit{space}: a netWorkSpace object that represents the workspace that client wants to `use', but not own. 
+	If this field is specified, then the existing netWorkSpace and server connection are used. Otherwise, a new netWorkSpace 
+    class object with the connection to the nws server, nwss, is created.
+	\end{itemize}
+		
+	\item {\bf Examples}
+	\begin{verbatim}
+	>> nwss = nwsServer;
+	>> nws = useWs(nwss, `my space');
+	\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{listWss}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+listWss
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	List all netWorkSpaces in the nwsServer, nwss.
+	\item {\bf Usage}\\
+	X = listWss(nwss);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nwss \hspace{2.5cm} \= a nwsServer class object.
+		\end{tabbing}
+	\item {\bf Details}\\
+	X = listWss(nwss) returns a struct array listing information
+	about all the netWorkSpaces currently available on the server reached by connection nwss.
+
+	If no left hand side, print a tabular listing. 
+		
+	\item {\bf Examples}
+	\begin{verbatim}
+	>> nws = netWorkSpace(`my space');
+	>> store(nws, `a', 1);
+	>> store(nws, `b', 2);
+	>> nwss = server(nws);
+	>> listWss(nwss);
+	\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{mktempWs}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+mktempWs
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Create a unique temporary workspace using template string.
+
+	\item {\bf Usage}\\
+	name = mktempWs(nwss, wsNameTemplate);
+
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nwss \hspace{2.5cm} \= a nwsServer class object. \\
+		wsNameTemplate \> template for the netWorkSpace name.
+		\end{tabbing}
+	\item {\bf Details}\\
+	name = mktempWs(nwss, wsNameTemplate) returns the name of a temporary space created
+	on the server reached by nwss. The template should contain a `\%d'-like construct
+	which will be replaced by a serial counter maintained by the server to generate
+	a unique new workspace name. The user must then invoke openWs() or useWs() with this name
+	to create a netWorkSpace object to access this workspace. wsNameTemplate defaults to `matlab\_ws\_\%010d'.
+		
+	\item {\bf Examples}
+	\begin{verbatim}
+	>> nwss = nwsServer;
+	>> nws = mktempWs(nwss, `template_%010d');
+	\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{socket}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+socket
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	returns socket connection of a nwsServer, nwss.	
+	\item {\bf Usage}\\
+	s = socket(nwss);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nwss \hspace{2.5cm} \= a nwsServer class object.
+		\end{tabbing}	
+	\item {\bf Examples}
+	\begin{verbatim}
+	>> nwss = nwsServer;
+	>> socket(nwss);
+	\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{deleteWs}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+deleteWs
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Delete a shared netWorkSpace with specific name from the nwsServer, nwss. 
+	\item {\bf Usage}\\
+	X = deleteWs(nwss, wsName);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nwss \hspace{2.5cm} \= a nwsServer class object. \\
+		wsName \> name of netWorkSpace.
+		\end{tabbing}	
+	\item {\bf Examples}
+	\begin{verbatim}
+	>> nwss = nwsServer;
+	>> deleteWs(nwss, `my space');
+	\end{verbatim}
+\end{list}
+%HEVEA }

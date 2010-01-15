@@ -1,0 +1,313 @@
+\section {Sleigh Class}
+%HEVEA\aname{sleigh}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+sleigh
+\newline
+\rule{6in}{0.01in}
+
+\begin{list}{}{}
+	\item {\bf Description}\\
+	  Sleigh class constructor.  
+	\item {\bf Usage}\\
+	  s = sleigh(sOpts);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		sOpts \hspace{2.0cm} \= an optional structure of fields, see Details.\\
+		\end{tabbing}
+	\item {\bf Details}\\
+     s = sleigh brings up three workers on `localhost' with default options for sOpts argument.
+     
+     sOpts argument contains several fields that give you ability to customize sleigh objects. 
+     
+	 \begin{itemize}
+	        \item \textit {nodeList}: a cell array of hosts on which to execute workers. One worker
+		  is created for each of the host names in the cell array. The default value is {`localhost', `localhost', `localhost'},
+		  which starts up three workers on local machine. nodeList is ignored when local launch or web launch is used. 
+		\item \textit {workerCount}: an integer that indicates how many workers will be created. Default value is 3.
+		  This variable is only relevant for local launch. 
+		\item \textit {nwsHost}: netWorkSpace server host name. Default is local machine. 
+		\item \textit {nwsPort}: netWorkSpace server port. Default port is 8765.
+		\item \textit {nwsPath}: directory path of where nws package is installed on worker nodes. Default is set to where NWS MATLAB is installed on the master node. This field is irrelevant to web launch.
+		\item \textit {outfile}: all remote workers' output will be redirected to this file, if verbose mode is set. By default, this field does not exist.
+		\item \textit {launch}: mechanism to launch workers. Four mechanisms are supported: ssh, rsh, web and local. For local and web, set launch to a string
+		  `local' and `web' respectively. For ssh and rsh, set launch to an anonymous function @sshcmd and @rshcmd respectively. 
+		\item \textit {scriptDir}: directory where matlab worker script is stored. Default is set to the bin directory under NWS MATLAB directory. This field is irrelevant to web launch.
+		\item \textit {scriptName}: script file name. Default is MatlabNWSSleighSession.sh on UNIX and MatlabNWSSleighSession.py for Windows.
+		\item \textit {user}: user name for remote login. This argument may be ignored depending on the launch type. 
+		  Default is the value set by environment variable, USER, on the sleigh master.
+		\item \textit {workingDir}: define remote workers' working directory. By default, this field is seet to master sleigh's current directory. 		\item \textit {logDir}: define the directory where log files are stored. By default, this field does not exist. 
+		\item \textit {wsNameTemplate}: template for the sleigh workspace name. This must be a legal `format' string, containing only an integer format specifier. Default prefix is `sleigh\_ride\_\%010d'
+		\item \textit {verbose}: verbose mode (0 or 1). Default value is 0. 
+    \end{itemize}
+         	    
+	\item {\bf Examples}
+		\begin{verbatim}
+		example 1:  start sleigh workers with default options.
+		>> s = sleigh;		
+
+		example 2:  create two sleigh workers on local machine using local launch, 
+                            and have server running on node10.
+		>> opt.nwsHost = `node10';
+		>> opt.workerCount = 2;
+		>> s = sleigh(opt);
+     
+		example 3: create two workers on node1 and node2 using ssh.
+		>> opt.launch = @sshcmd;
+		>> opt.nodeList = {`node1', `node2'};
+		>> s = sleigh(opt);
+
+		example 4: start sleigh with web launch.
+		>> opt.launch = `web';
+		>> s = sleigh(opt);
+		\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{eachWorker}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+eachWorker
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+     Evaluates function exactly once for each worker in sleigh, s. 
+	\item {\bf Usage}\\     
+     x = eachWorker(s, toDo, fixedArgs, execOptions);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		s \hspace{2.0cm} \= a sleigh class object.\\
+		toDo \> function or expression to be evaluated by sleigh workers. \\
+		varargin \> fixed arguments or/and a structure of options.
+		\end{tabbing}
+		
+	\item {\bf Details}\\  
+    The only required arguments for eachWorker are s and toDo. The rest are optional arguments. 
+    
+    varargin is a variable length of arguments. It is used to specify fixed arguments followed by a structure of fields. 
+    For sleigh workers, arguments passed to the evaluated function or expression can be accessed through a global variable named sleighTask.argCA, 
+    which is a cell array of values mapped from varargin. The last element of varargin can be a structure that contains the following fields:
+  	\begin{itemize}
+		\item \textit{type}: determines the type of function invocation. This can be `invoke' (evaluate the function), 
+		`define' (transport function to sleigh workers, no evaluation will be done), or `eval' (evaluate expression).
+		Default type is `invoke'. If type is `invoke' or `define', then toDo argument must be a valid function name. 
+		If type is `eval', then toDo argument is evaluated as it is. 
+		\item \textit{blocking}: determines whether to wait for the results, or to return as soon as the tasks have submitted. 
+		Default value is set to 1, which means eachWorker is blocked until all tasks are completed. If value
+		is set to 0, then eachWorker returns immediately with a sleighPending object that is used to monitor the 
+		status of the tasks, and eventually used to retrieve results. You must wait for the results to be completed
+		before submitted more tasks to the sleigh workspace. 
+	\end{itemize}
+
+    The results from eachWorker are returned as a two-dimensional cell array.
+    However, if blocking field of the structure is set to 0, then an instance of the sleighPending class is returned.
+    
+	\item {\bf Examples}
+		\begin{verbatim}
+		example 1: execute function with no arguments.
+		>> s = sleigh;
+		>> status = eachWorker(s,`init');
+
+		Here is how init.m may look like: 
+		function x = init()
+		x = 1;
+                end
+
+		example 2: execute eachWorker with eval execution type.
+		>> s = sleigh;
+		>> opt.type=`eval'
+		>> eachWorker(s, `2*sleighTask.argCA{1}', 3, opt)	
+		\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{eachElem}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+eachElem
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Evaluate multiple argument sets using workers in sleigh, s. 
+	\item {\bf Usage\\}
+	x = eachElem(s, toDo, elementArgs, fixedArgs, execOptions);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		s \hspace{2.5cm} \= a sleigh class object.\\
+		toDo \> function or expression to be evaluated by sleigh workers. \\
+		elementArgs \> a vector, a cell array of elements (x, y, ... z), or two dimensional cell arrays. \\
+		fixedArgs \> a scalar or a cell array of fixed arguments/constants \\
+		execOptions \> an optional structure of fields.
+		\end{tabbing}
+
+	\item {\bf Details}\\
+	  eachElem(s, toDo, elementArgs, fixedArgs, execOptions) forms argument sets from values passed in elementArgs and fixedArgs. 
+	  elementArgs can be a vector, a cell array of entries (x, y, ... z), or a two-dimensional cell array. 
+	  If elementArgs is a single-dimensional cell array with entries (x, y, ... z), 
+	  then all entries must be of same length, which is determined by the iterating scheme (variable 'by' in execOptions struct). 
+	  For example, if iterating schemes is to iterate by row, then then the number of rows for each argument has to be equal. 
+
+	  If function to be executed requires only one varying argument, then elementArgs can be
+	  expressed as a vector instead of a cell array. 
+
+	  If elementArgs is a two-dimensional cell array, then the number of tasks equals
+	  the number of rows in a two-dimensional cell array. The number of arguments to the 
+	  function equals the number of columns in the two-dimensional cell array.
+ 
+	  If fixedArgs is provided, then these additional arguments are appended to the argument set. 
+	  The ordering of arguments can be changed by using argPermute vector, which defined as part of 
+	  execOptions (see below).
+
+	  The results from eachElem are normally returned as a two-dimensional cell array. 
+	  However, if blocking field of execOptions is set to 0, then an instance of the sleighPending class is returned.
+
+	  toDo argument is a function or an expression to be evaluated by sleigh workers. toDo must be a function name (for `invoke'
+	  type) or expressions (for `eval' type) in quotes.
+    
+	  For sleigh workers, arguments passed to the evaluated function or expression can be accessed through a global variable named sleighTask.argCA, 
+          which is a cell array of values concatenate together from elementArgs and fixedArgs.
+
+	  execOptions argument is a structure that contains the following fields:
+	\begin{itemize}
+		\item \textit {type}: determines the type of function invocation to perform. This can be `invoke' (evaluate the function) or 
+		`eval' (evaluate expression). Default type is `invoke'. If type is `invoke', then toDo argument must be a valid function name.
+		If type is `eval', then toDo argument is evaluated as is. 
+    
+		\item \textit {blocking}: determines whether to wait for the results, or to return as soon as the tasks have submitted. 
+		Default value is set to 1, which means eachElem is blocked until all tasks are completed. If value is set to 0,
+		then eachElem returns immediately with a sleighPending object that is used to monitor the status of the tasks,
+		and eventually used it to retrieve results. You must wait for the results to be completed before submitting
+		more tasks to the sleigh workspace.
+	
+		\item \textit {argPermute}: a vector of integers used to permute each (elementArgs + fixedArgs) argument list to match 
+		the calling convention of toDo.
+    
+		\item \textit {loadFactor}: to restrict the number of tasks put out to the workspace.
+		If set, no more than loadFactor times the number of worker tasks will be posted at once.
+                This helps to control resource demands on the nws server. It is mutually exclusive with
+                `blocking' set to 0.
+
+		\item \textit {by}:  one of three iterating schemes: `cell', `row', or
+		  `column'. Default value is to iterate by cell. All elements of
+		  elementArgs iterates based on the 'by' value. If different
+		  iterating scheme is needed for each element of the
+		  elementArgs, a cell array of different iterating schemes can
+		  be specified. For example: opt.by = {'row', 'column'}.
+		  Each index of the 'by' cell array represents the iterating
+		  scheme for the corresponding elements in the elementArgs. 
+		  If no value is specified, then default value `cell' is assumed. 
+		  The `by' field is ignored if elementArgs is a two-dimensional cell array.
+
+	\end{itemize}
+    
+	\item {\bf Examples}\\
+	Here is how addone.m may look like:
+		\begin{verbatim}
+		>> s = sleigh;
+		>> result = eachElem(s, `mean', {[1 2.5 3.1]})
+
+		result =
+		    [     1]
+  		    [2.5000]
+		    [3.1000]
+		\end{verbatim}	
+
+		eachElem(s, `foo', {1:3, 4:6, 7:9})\\
+
+		will generate three invocations of `foo':\\
+
+			foo(1, 4, 7)\\
+			foo(2, 5, 8)\\
+			foo(3, 6, 9)\\
+
+		while
+
+		\begin{verbatim}
+		elementArgs = {1:3, 4:6, 7:9}
+		fixedArgs = {100, 200, 300}
+		eachElem(s, `foo', elementArgs, fixedArgs)
+		\end{verbatim}
+
+		will generate:\\
+
+		foo(1, 4, 7, 100, 200, 300)\\
+		foo(2, 5, 8, 100, 200, 300)\\
+		foo(3, 6, 9, 100, 200, 300)\\
+        
+        To change invocation type
+	
+		\begin{verbatim}
+		>> opt.type = `eval'
+		>> eachElem(s, `sleighTask.argCA{1}*2', 1:5, {}, opt);
+		ans = 
+		    [2]
+		    [4]
+		    [6]
+		    [8]
+		    [10]
+		\end{verbatim}
+		
+		To change the order of passing arguments
+	
+		\begin{verbatim}
+		>> opt.argPermute = [1 3 2 6 5 4]
+		>> opt.type = `invoke'
+		>> eachElem(s, `foo', elementArgs, fixedArgs)
+		\end{verbatim}
+	    
+		will generate:\\
+	 
+			foo(1, 7, 4, 300, 200, 100)\\
+			foo(2, 8, 5, 300, 200, 100)\\
+			foo(3, 9, 6, 300, 200, 100)\\
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{nws}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+nws
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Return the netWorkSpace that is used to communicate data between sleigh master and sleigh workers. 
+	\item {\bf Usage}\\
+	nws(s);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		s \hspace{2.5cm} \= a sleigh class object.
+		\end{tabbing}
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> s = sleigh
+		>> nws(s)
+		\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{stop}{
+\rule[0.06in]{6in}{0.01in}
+\par
+stop
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Remove worker processes and delete the sleigh workspace.
+	\item {\bf Usage}\\
+	stop(s)
+	\item {\bf Arguments}
+		\begin{tabbing}
+		s \hspace{2.5cm} \= a sleigh class object.\\
+		\end{tabbing}
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> s = sleigh
+		>> stop(s)
+		\end{verbatim}
+\end{list}
+%HEVEA }
+

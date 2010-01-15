@@ -1,0 +1,99 @@
+Sleigh for MATLAB
+------------------
+
+Sleigh is a MATLAB class, built on top of the NetWorkSpaces, that makes
+it easy to write simple parallel programs.  Sleigh has the concept of
+one master and multiple workers.  The master sends jobs to the workers, who
+may or may not be on the same machine as the master.  To enable the
+master to communicate with workers, Sleigh supports several mechanisms
+to launch workers to run jobs.
+
+Note: This README file assumes that you have read the README file for
+NetWorkSpaces and have set up both NetWorkSpaces server and client
+according the instructions.
+
+
+Local Launch Mechanism
+=======================
+Local launch mechanism is the default option to start up workers. It
+starts two workers by default on local machine. Users may choose to
+change the number of workers by setting workerCount variable in the sOpt
+struct of the sleigh constructor.  Local launch is useful for SMP
+machine, where multiple cores/processors are available. Local launch is
+also useful in debugging parallel programs locally before running over a
+large cluster.
+
+
+SSH Launch Mechanism
+=====================
+To start up workers on different machines, a remote login mechanism,
+such as SSH, is needed. Before you can start Sleigh, we need to setup
+password-less ssh login.
+
+Setting Up a Password-less SSH Login
+===========================================
+
+To generate public and private keys, follow the steps below.
+------------------------------------------------------------
+ 1. ssh-keygen -t rsa
+ 2. cd ~/.ssh (.ssh directory is located in your HOME directory)
+ 3. cp id_rsa.pub authorized_keys This step allows password-less login
+    to local machine.
+ 4. For all remote machines that you want password-less login, append
+   the content of  id_rsa.pub to their authorized_keys file.
+
+To test the password-less login, type the following command:
+------------------------------------------------------------
+  % ssh hostname date
+
+If everything is setup correctly, you should not be asked for password
+and the current date on remote machine will be returned.
+
+
+Web Launch Mechanism
+=====================
+If you are running Sleigh on a platform that does not support SSH,
+Sleigh provides an alternative web launch option.
+
+
+To use the web launch option, follow the steps below.
+-----------------------------------------------------
+Web launch mechansim allows user to start up workers on different
+machines in an ad-hoc way, without setting up remote login mechanisms,
+such as SSH and RSH. 	
+
+ 1. Start Sleigh using web launch: 		
+    >> opt.launch = 'web';
+    >> s = sleigh({}, opt);
+
+    The Sleigh constructor does not return until it gets a signal that all
+    workers have started and are ready to accept jobs.
+ 	
+ 2. Log in to a remote machine. 	
+ 3. Start a MATLAB session. 	
+ 4. Open a web browser and point to http://server_host_name:8766,
+    where server_host_name refers to the machine that a netWorkSpaces
+    server runs on.
+ 5. Click on the newly created Sleigh workspace, and read the value from
+    variable 'runMe'. It usually has value similar to this,
+   	launch('sleigh_ride_0000000004_tmp1a6c0h', 'mercury', 8765); 	
+ 6. Copy the 'runMe' value to the MATLAB session.  	
+ 7. Repeat steps 2-6 for each worker that needs to be started. 	
+ 8. Once all workers have started, delete the
+   'DeleteMeWhenAllWorkersStarted' variable from the Sleigh workspace.
+   This signals Sleigh master that the workers have started and are
+   ready to accept work.
+
+Other Launch Mechanisms
+========================
+Sleigh also supports RSH to start up remote workers. For more
+information on launch mechanisms supported by Sleigh, simply type the
+following in an MATLAB session after NetWorkSpaces package is added to
+the path:
+
+> help sshcmd   (information on SSH mechanism)
+> help rshcmd   (information on RSH mechanism)
+
+Now you're ready to send jobs to remote workers.
+
+See the tutorial in doc directory for more information.

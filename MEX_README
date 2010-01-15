@@ -1,0 +1,5 @@
+To use this you must compile nwsMex.c with the mex command that came
+with your matlab distribution. See mexCommand... for some examples.
+
+Examples of using this service are in nwsExample.m. Start matlab and
+then simply execute 'nwsExample'.

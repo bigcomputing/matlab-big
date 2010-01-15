@@ -1,0 +1,2 @@
+/opt/matlab/bin/mex nwsMex.c
+

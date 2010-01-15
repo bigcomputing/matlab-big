@@ -1,0 +1,67 @@
+NetWorkSpaces for MATLAB
+-------------------------
+
+NetWorkSpaces (NWS) is a powerful, easy-to-use software package that
+makes it easy to write distributed programs using scripting language
+such as Matlab. It uses a Space-based approach, similar to JavaSpaces
+(TM) for example, that makes it easy to write distributed applications.
+This software has been tested under Linux, Mac OS X, and Windows XP.
+
+For more information on installing NetWorkSpaces for Matlab, please see
+the accompanying INSTALL file.
+
+To use NetWorkspaces, you'll need a NetWorkSpace server installed and
+running on a machine that you can connect to. The NetWorkspaces server
+is an open-source program implemented in Python using the Twisted
+framework. It is packaged separately from the client software. You can
+download a copy of the NetWorkSpace server at sourceforge,
+http://nws-r.sourceforge.net
+
+The server only needs to be installed on one machine, while multiple
+copies of client software may be installed on more than one machine on
+the network.
+
+For more information on installing the NetWorkSpace server, please see
+the INSTALL file in the NetWorkSpace server package.
+
+Once you've got a NetWorkSpace server up and running, you're ready to
+use NetWorkSpaces.  You can do a simple test to make sure everything is
+installed properly by typing the following:
+
+  % matlab
+  >> ws = netWorkSpace('matlab space');
+  >> store(ws, 'x', 1);
+
+The above three lines start a matlab session, create a workspace named
+'matlab space', and store a variable x with value 1 to the workspace.
+
+If you've encountered error messages in the above three lines, it's
+likely that you didn't set up MATLABPATH correctly.  You should append
+the absolute path of where the client software is installed to your
+MATLABPATH environment variable.
+
+To read the usage on a function, you can simply type
+
+  >> help function_name
+
+This returns a detailed descriptions of the function usage.
+
+You can also view what's in the workspace using a web interface.  To do
+this, you point your browser to http://server_host_name:8766, where
+server_host_name is the machine that NetWorkSpace server resides on.
+
+In order to examine values that you've created in a workspace using the
+server's web interface, you need to run a Matlab babelfish.  The
+babelfish translates values into a human readable format so they can be
+displayed in the web browser.  If a value is a string, then the web
+interface simply displays the contents of the string, without any help
+from the babelfish.  But, if the value is any other type of Matlab
+object, it needs help from the Matlab babelfish.  To start the
+babelfish, execute the following command in another matlab prompt:
+
+  >> babelfish
+
+Note: this function will not return until you exit out of Matlab.
+
+More examples on using NetWorkSpaces are available in the doc directory
+and in the manual.

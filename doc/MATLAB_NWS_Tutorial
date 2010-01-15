@@ -1,0 +1,127 @@
+NetWorkSpaces for MATLAB Tutorial
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=
+
+    NetWorkSpaces (NWS) is an MATLAB package that makes it very easy to
+communicate and coordinate multiple MATLAB programs running on different
+machines.  In this chapter, we will give a small walk-through of writing
+a simple program  using NetWorkSpaces. The `Reference Manual' chapter
+contains a detailed reference of the NetWorkSpace class.
+  First, start an interactive MATLAB session.
+  Next, create a workspace called 'bayport':
+
+  >> ws = netWorkSpace('bayport');
+
+  
+  This workspace is created on a NWS server located on localhost, port
+8765.  Additional arguments can be passed to the netWorkSpace
+constructor to specify  a NWS server located on different hostname and
+port. Please refer to  `Reference Manual' chapter for more examples.
+  Once we have a workspace, we can write data into a variable using
+store method:
+
+  >> store(ws, 'joe', 17);
+
+  
+  The variable 'joe' now has a value of 17 in the workspace named
+'bayport'.
+  To find out the value associates with the variable 'joe', we use find
+method:
+
+  >> age = find(ws, 'joe');
+
+  
+  which sets 'age' to 17.
+  Note that the find method will block until the variable 'joe' has a
+value. This is important when we're trying to read that variable from a
+different machine. If it didn't block, you might have to repeatedly try
+to read the variable until it succeeded. Of course, there are times when
+you don't want to block, but just want to see if some variable has a
+value. That is done using the findTry method.
+
+  >> age = findTry(ws, 'chet');
+
+  
+  This assigns '0' to age, since we didn't stored any value to variable
+'chet'.  If you'd rather have findTry return some other value when the
+variable doesn't exist, you can pass in an extra argument to findTry
+method:
+
+  >> age = findTry(ws, 'chet', 1);
+
+  
+  which assigns 1 to age, if variable 'chet' doesn't exist.
+  So far, we've carefully executed store method once for each variable
+created. What if we execute store method more than once? Then, it
+depends on the mode of the variable. By default, a variable created by
+the store method uses first-in-first-out (FIFO), which means the first
+stored value in the workpace  will be the first one to be read. If you
+want to use a different mode for the variable, you have to use the
+declare method to create the variable first. Please refer to  the
+`Reference Manual' chapter for descriptions on different modes.
+  Since find method does not remove value from the workspace, we cannot
+use find method to read multiple values associate with a variable. To
+read through all the values, we  have to use 'fetch' method. The fetch
+method works the same as find, but in addition,  it removes the value.
+This can be useful in sending a sequence of messages from one program to
+another.
+  Let's try writing multiple values to a variable: 
+
+  >> n = [16 19 25 22]
+  >> for i = 1:length(n)
+  store(ws, 'biff', n(i))
+  end
+
+  
+  To read the values, we just call fetch repeatedly: 
+
+  >> n = []
+  >> for i = 1:4
+  n = [n fetch(ws, 'biff'))
+  end
+
+  
+  If we didn't know how many values were stored in a variable, we could
+have done the following: 
+
+  >> n = []
+  >> while 1
+  t = fetchTry(ws, 'biff');
+  if t==0 break; end;
+  n = [n t];
+  end
+
+  
+  This uses fetchTry, which works like fetch, except that it is
+non-blocking.
+  These are the basic operations provided by NWS. It's a good idea to
+play around with  these operations using two MATLAB sessions. That way,
+you can really transfer data between  two different programs. Also, you
+can see how the blocking operations work. In the examples above,  we
+were careful never to block because we were only using one MATLAB
+session.
+  To use two MATLAB sessions, just execute MATLAB in another window,
+export MATLABPATH or have it saved and load up automatically when a new
+window is opened.  Then, open the `bayport' workspace. This can be done
+with the same command that  we used previously, but this time, the
+command: 
+
+  >> ws = netWorkSpace('bayport')
+
+  won't create the 'bayport' workspace, since it already exists. Now you
+can execute a operation such as: 
+
+  >> x = fetch(ws, 'frank')
+
+  in one session, watch it block for a minute, and then execute store in
+the other session: 
+
+  >> store(ws, 'frank', 18)
+
+  and see that the fetch in the first session completes.
+  While you're experimenting with these operations, it can be very
+helpful to use the NWS server's web interface to see what's going on in
+your workspaces. Just point your web browser to the URL:
+   http://localhost:8766
+  If you're using a browser on another machine from the NWS server
+you'll have to use the appropriate hostname, rather than 'localhost'.
+  That's all you need to get started. Have fun!

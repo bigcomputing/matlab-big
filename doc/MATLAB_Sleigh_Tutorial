@@ -1,0 +1,147 @@
+Sleigh for MATLAB Tutorial
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+Sleigh is a MATLAB class, built on top of NWS, that makes it very
+easy to write simple parallel programs. It provides two basic functions
+for executing tasks in parallel: eachElem and eachWorker.
+  eachElem is used to execute a specified function multiple times in
+parallel with a varying set of arguments.
+  eachWorker is used to execute a function exactly once on every worker
+in the sleigh with a fixed set of arguments.
+  eachElem is all that is needed for most basic programs, so that is
+what we will start with.
+  First, we need to start up a sleigh.
+
+  >> s = sleigh
+  
+  This starts three sleigh workers on the local machine, but 
+the number of sleigh workers can be changed by specifying
+workerCount field of the struct argument. 
+
+Let's shut down sleigh so we can start different number of workers on 
+local machine. 
+
+  >> stop(s)
+
+  
+  This deletes the sleigh's NWS workspace, and shuts down all of the
+sleigh worker processes.
+  Now we'll make a new sleigh, with two workers on local machine, and
+we'll use an NWS server that's running on node10:
+
+  >> opt.nwsHost = 'node10';
+  >> opt.workerCount = 2;
+  >> s = sleigh(opt);
+
+  
+  Now we're ready to run a parallel program. Here it is:
+
+  >> result = eachElem(s, 'add1', 1:10);
+
+  
+  In this simple command, we have defined a set of data that is
+processed by multiple workers in parallel, and returned each of the
+results in a cell array. Of course, you would never really bother to do
+such a trivial amount of work with a parallel program, but you get the
+idea.
+  This eachElem function puts 10 tasks into the sleigh workspace. Each
+task contains one value from 1 to 10. This value is passed as the
+argument to the add1 function. The return value of the function is put
+into the sleigh workspace. The eachElem function waits for all of the
+results to be put into the workspace, and returns them as a cell array,
+which are numbers from 2 to 11.
+  Note that add1 is an M function that looks like this,
+
+  function y = add1(x)
+  y = x+1;
+
+  
+  As a second example, let's add two lists together:
+  We first defined an add2 function:
+
+  function z = add2(x, y)
+  z = x + y;
+
+  
+  Then, we invoke the function with two variable arguments. Since we
+have two  variable arguments, we have to enclosed two vectors in a cell
+array.
+
+  >> result = eachElem(s, 'add2', {1:5, 6:10});
+
+  
+  This is the parallel equivalent to the MATLAB command:
+
+  >> result = (1:5) + (6:10);
+
+  
+  We can keep adding more list arguments in this way, but there is also
+a way to add arguments that are the same for every task, which we call
+fixed arguments:
+
+  >> result = eachElem(s, 'add2', 1:10, 1);
+
+  
+  This is equivalent to the MATLAB command:
+
+  >> result = (1:10) + 1;
+
+  
+  It is also equivalent to invoking add1 function we previous defined. 
+
+  >> result = eachElem(s, 'add1', 1:10)
+
+  
+  The order of the arguments passed to the function are normally in the
+specified order, which means that the fixed arguments always come after
+the varying arguments. To change this order, a permutation vector can be
+specified. The permutation vector is specified using the "argPermute"
+field in the execOptions parameter.
+  For example, to perform the parallel equivalent of the MATLAB
+operation 100 - (1:10), we do the following:
+
+  >> opt.argPermute = [2 1];
+  >> result = eachElem(s, 'sub2', 1:10, 100, opt);
+
+  
+  This permutation vector says to first use the second argument, and
+then use the first, thus reverse the order of two arguments.
+  The sub2 function used in this example looks like this:
+
+  function z = sub2(x, y) 
+  z = x - y;
+
+  
+  There is another keyword argument, called "blocking", which, if set
+to 0, will make eachElem return immediately after submitting the tasks,
+thus making it non-blocking. A "pending" object is returned, which can
+be used periodically to check how many of the tasks are completed, and
+also to wait until all tasks are finished. Here's a quick example:
+
+  >> opt.blocking = 0;
+  >>sp = eachElem(s, 'add2', {1:1000, 1001:2000}, opt)
+  >> while check(sp) > 0
+  % Do something useful for a little while
+  % pass
+  >> result = wait(sp)
+
+  
+  There is also a keyword argument called "loadFactor" that enables
+watermarking. This limits the number of tasks that are put into the
+workspace at the same time. This could be important if you're executing
+a lot of tasks. Setting the load factor to 3 limits the number of tasks
+in the workspace to 3 times the number of workers in the sleigh
+workspace.  Here's how to do it:
+
+  >> opt.loadFactor = 3;
+  >> result = eachElem(s, 'add2', {1:100, 101:200}, opt);
+
+  
+  The results are exactly the same as not using a load factor. Setting
+this option only changes the way that tasks are submitted by the
+eachElem function.
+  As you can see, Sleigh makes it very easy to write simple parallel
+programs. But you're not limited to simple programs. You can use NWS
+operations to communicate between the worker processes, allowing you to
+write message passing parallel programs much more easily than using MPI
+or PVM, for example.

@@ -1,0 +1,46 @@
+\documentclass[12pt]{report}
+
+% These twolines are needed by the epydoc generated files
+\usepackage{alltt}
+\usepackage{makeidx, multirow, longtable, tocbibind, amssymb}
+
+\usepackage{url}
+\usepackage{geometry}
+\geometry{letterpaper}
+\usepackage[parfill]{parskip}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+
+\newlength{\BCL} % base class length, for base trees.
+
+\pagestyle{fancy}
+\headheight 15pt
+
+\title{\bf NetWorkSpaces for Matlab \\ User Guide \\ \rm \it Version 1.3}
+\author{REvolution Computing, Inc. \\ http://www.lindaspaces.com}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\chapter{Introduction}
+\input{intro}
+
+\chapter{Getting Started}
+\input{getting_started}
+
+\chapter{Tutorials}
+\input{nws_tutorial}
+\input{sleigh_tutorial}
+
+\appendix
+\chapter{Reference}
+\input{netWorkSpace_doc}
+\input{nwsServer_doc}
+\input{sleigh_doc}
+\input{sleighPending_doc}
+
+\chapter{Remote Execution Configuration}
+\input{ssh_configuration}
+
+\end{document}

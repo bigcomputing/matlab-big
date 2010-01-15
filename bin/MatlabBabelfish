@@ -1,0 +1,23 @@
+#!/bin/sh
+
+exec ${MATLABPROG:-'matlab'} -nosplash -nodesktop -nodisplay -nojvm <<'EOF' > /dev/null
+nwsPath = getenv('MATLABNWSPATH');
+if ~isequal(nwsPath, '')
+  addpath(nwsPath);
+end
+nwsHost = getenv('NWS_HOST');
+if isequal(nwsHost, '')
+  nwsHost = 'localhost';
+end
+port = getenv('NWS_PORT');
+if isequal(port, '')
+  port = '8765';
+end
+[nwsPort, status] = str2num(port);
+if ~status
+  error('bad port value specified');
+end
+
+babelfish(nwsHost, nwsPort);
+quit force;
+EOF

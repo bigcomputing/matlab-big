@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>Label</key>
+        <string>com.bigcomputing.matlabbabelfish</string>
+        <key>ProgramArguments</key>
+        <array>
+                <string>/bin/sh</string>
+                <string>/usr/local/bin/MatlabBabelfish</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>EnvironmentVariables</key>
+        <dict>
+                <key>MATLABPROG</key>
+                <string>/Applications/MATLAB_R2008a/bin/matlab</string>
+                <key>MATLABNWSPATH</key>
+                <string>/Users/matlab/nws</string>
+                <key>NWS_PORT</key>
+                <string>8765</string>
+        </dict>
+        <key>UserName</key>
+        <string>matlab</string>
+        <key>GroupName</key>
+        <string>matlab</string>
+        <key>WorkingDirectory</key>
+        <string>/private/tmp</string>
+        <key>KeepAlive</key>
+        <dict>
+                <key>OtherJobEnabled</key>
+                <dict>
+                        <key>com.bigcomputing.nwsserver</key>
+                        <true/>
+                </dict>
+        </dict>
+</dict>
+</plist>

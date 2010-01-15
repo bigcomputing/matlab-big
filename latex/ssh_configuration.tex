@@ -1,0 +1,21 @@
+\section{Setting Up a Password-less SSH Login}
+\begin{itemize}
+\item To generate public and private keys, follow the steps below:
+\begin{itemize}
+\item Open a terminal (shell on UNIX and DOS prompt on Windows).
+\item \texttt{ssh-keygen -t rsa} \\ (assume ssh-keygen is in your PATH)
+\item \texttt{cd .ssh} \\ (.ssh directory is located in your HOME directory,
+/home/user on UNIX or Cygwin and
+C:$\backslash$Program~Files$\backslash$copssh$\backslash$home$\backslash$user on Windows)
+\item \texttt{cp id\_rsa.pub authorized\_keys} \\
+This step allows password-less login to local machine. 
+\item For all remote machines that you want password-less login, append the content of 
+id\_rsa.pub to their authorized\_keys file.
+\end{itemize}
+\item To test the password-less login, type the following command:
+\begin{verbatim}
+% ssh hostname date
+\end{verbatim}
+If everything is setup correctly, you should not be asked for password and the
+current date on remote machine will be returned. 
+\end{itemize}

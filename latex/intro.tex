@@ -1,0 +1,110 @@
+NetWorkSpaces (NWS) provides a framework to coordinate programs written
+in scripting languages; NWS currently supports the languages Python,
+MATLAB, and R.  This User Guide is for the MATLAB system, and it
+assumes that the reader is familiar with MATLAB.
+
+\section{Data Sharing}
+A MATLAB program uses variables to communicate data from one part of the
+program to another.  For example, \texttt{x = 123} assigns the value 123
+to the variable named \texttt{x}.  Later portions of the program can
+reference \texttt{x} to use the value 123.  This mechanism is generally
+known as \textit{binding}.  In this case, the binding associates the
+value 123 with the name \texttt{x}.  The collection of name-value
+bindings in use by a program is often referred to as its
+\textit{workspace}.
+
+Two or more MATLAB programs use NWS to communicate data by means of
+name-value bindings stored in a network-based workspace (a netWorkSpace,
+which in MATLAB is an instance of a netWorkSpace object).  One program
+creates a binding, while another program reads the value the binding
+associated with the name. This is clearly quite similar to a traditional
+workspace; however, a netWorkSpace differs from a traditional workspace
+in two important ways.
+
+First, in a setting in which two or more MATLAB programs are
+interacting, it would not be unusual for one to attempt to ``read'' the
+value of a name before that name has been bound to a value.  Rather than
+receiving an ``unbound variable'' error, the reading program (by default)
+simply waits (or ``blocks'') until the binding occurs. Second, a common
+usage paradigm involves processing a sequence of values for a given
+name. One MATLAB program carries out a computation based on the first
+value, while another might carry out a computation on the second, and so
+on. To facilitate this paradigm, more than one value may be bound to a
+name in a workspace and values may be ``removed'' (fetch) as opposed to
+read (find). By default, values bound to a name are consumed in
+first-in-first-out (FIFO) order, but other modes are supported:
+last-in-first-out (LIFO), multiset (no ordering implied) and single
+(only the last value bound is retained). Since all its values could be
+removed, a name can, in fact, have no values associated with it.
+
+A netWorkSpace provides five basic operations:
+\textbf{store}, \textbf{fetch}, \textbf{fetchTry}, \textbf{find}, and
+\textbf{findTry}:
+\begin{description}
+\item[store] introduces a new binding for a specific name in a given workspace.
+\item[fetch] fetches (removes) a value associated with a name, blocking
+if necessary until a value is available.
+\item[fetchTry] fetches (removes) a value associated with a name without
+blocking.
+\item[find] reads a value without removing it, blocking if necessary.
+\item[findTry] reads a value without removing it and without blocking.
+\end{description}
+
+Note that \textbf{fetchTry} and \textbf{findTry} return \texttt{0} or
+a user-supplied default if no value is available.
+
+There are several additional netWorkSpace operations:
+\begin{description}
+\item[currentWs] returns the name of the specified workspace.
+\item[declare] declares a variable name with a specific mode.
+\item[deleteVar] deletes a name from a workspace.
+\item[listVars] provides a list of variables (bindings) in a workspace.
+\end{description}
+
+In addition to a netWorkSpace, a MATLAB client of NWS also uses an
+nwsServer object. This object is created automatically when a new
+netWorkSpace object is created, so you don't need to interact directly
+with it. However, the \texttt{server} method provides access to the
+nwsServer object:
+
+\begin{verbatim}
+>> ws = netWorkSpace('foo')
+>> server(ws)
+\end{verbatim}
+
+A nwsServer object supports the following actions:
+
+\begin{description}
+\item[openWs] connects to a workspace or creates one if the specified
+workspace does not exist. 
+\item[useWs] uses a netWorkSpace without claiming ownership.
+\item[deleteWs] explicitly deletes a workspace.
+\item[listWss] provides a list of workspaces in the server.  
+\item[close] closes the connection to a workspace. Depending on the
+ownership, closing a connection to a workspace can result in removing
+the workspace. 
+\end{description}
+
+\section{Parallel Computing}
+The operations above enable coordination of different programs using
+NWS. There is also a mechanism, built on top of NWS, called Sleigh
+(inspired by R's SNOW package) to enable parallel function evaluation.
+Sleigh is especially useful for running {\it embarrassingly parallel}
+programs on multiple networked computers. Once a sleigh is created by
+specifying the nodes that are participating in computations, you can
+use:
+
+\begin{description}
+\item[eachElem] is used to execute a specified function multiple times
+in parallel with a varying set of arguments.
+\item[eachWorker] is used to execute a function exactly once on every
+worker in the sleigh with a fixed set of arguments.
+\end{description}
+
+Various data structures (workspaces, name-value bindings, etc.) in a NWS
+server can be monitored and even modified using a web interface. In
+distributed programming, even among cooperating programs, the state of
+shared data can be hard to understand. The web interface presents a
+simple way of checking current state remotely. This tool can also be
+used for learning and debugging purposes, and for monitoring ``normal''
+MATLAB programs as well.

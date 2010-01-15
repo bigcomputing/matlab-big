@@ -1,0 +1,91 @@
+\section {sleighPending Class}
+%HEVEA\aname{sleigh}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+sleighPending
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	  sleighPending class constructor.  
+	\item {\bf Usage}\\
+	  s = sleigh(nws, count, tb, busyfh);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nws \hspace{2.0cm} \= netWorkSpace class object.\\
+		count \> number of tasks.\\
+		tb \> barrier names.\\
+		busyfh \> sleigh state.\\	
+		\end{tabbing}
+	\item {\bf Details}\\
+     sp = sleighPending(nws, count, tb, busyfh) creates a pending sleigh job, sp. 
+     The sleighPending object can be used to monitor outstanding tasks and to 
+     retrieve results upon completion. 
+         	    
+	\item {\bf Examples}
+		\begin{verbatim}
+		example 1:  
+		get sleighPending object from non-blocking eachElem
+		>> opts.blocking = 0;
+		>> s = sleigh;
+		>> sp = eachElem(s, 'add1', 1:1000, {}, opts)
+		\end{verbatim}
+\end{list}
+%HEVEA }
+
+
+%HEVEA\aname{check}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+check
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+    Return the number of results yet to be generated for the pending sleigh job, sp. 
+	\item {\bf Usage}\\
+	check(sp);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		sp \hspace{2.5cm} \= a sleighPending class object.
+		\end{tabbing}
+	\item {\bf Details}\\
+	The pending sleigh job, sp, is usually obtained through non-blocking eachElem or non-blocking eachWorker. 
+	If the job has already completed and the results have been gathered, 0 is returned. 
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> s = sleigh
+		>> opt.blocking = 0
+		>> sp = eachElem(s, `addone', 1:1000, {}, opt)
+		>> check(sp)
+		\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{wait}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+wait
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+    Wait and block for the results to be completed for the pending sleigh job, sp. 
+    If the job has already completed, then wait returns immediately with generated results. 
+	\item {\bf Usage}\\
+	wait(sp);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		sp \hspace{2.5cm} \= a sleighPending class object.
+		\end{tabbing}
+	\item {\bf Details}\\
+	The pending sleigh job, sp, is usually obtained from the return value of non-blocking eachElem or non-blocking eachWorker. 
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> s = sleigh
+		>> opt.blocking = 0
+		>> sp = eachElem(s, `addone', 1:1000, {}, opt)
+		>> wait(sp)
+		\end{verbatim}
+\end{list}
+%HEVEA }

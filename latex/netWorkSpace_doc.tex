@@ -1,0 +1,432 @@
+\section {netWorkSpace Class}
+%HEVEA\aname{netWorkSpace}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+netWorkSpace
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description\\}
+	netWorkSpace class constructor.
+	\item {\bf Usage\\}
+	ws = netWorkSpace(wsName, h, p);
+	or \\
+	ws = netWorkSpace(wsName, opts);
+	\item {\bf Arguments}
+ 		\begin{tabbing}
+		wsName \hspace{2.5cm} \= name of the workspace.\\
+		h \> server host name.\\
+		p \> server port.\\
+		opts \> an optional structure of fields. see details.\\
+		\end{tabbing}
+	\item {\bf Details\\}
+	netWorkSpace(ws, h, p) or netWorkSpace(ws, opts) creates an object for the shared netWorkSpace wsName residing in the netWorkSpaces server 
+	running on host h, port p. If host name and port number are not provided, then `localhost' is used as default
+	value for host name, and 8765 is used as default value for port.
+
+	opts is an optional structure of fields. If opts is presented, then host name and port number is specified through opts instead
+	of arguments to the function.
+
+	opts may contain these fields:
+	\begin{itemize}
+		\item \textit {server}: nwsServer class object. This field is not needed, if host name and port number are provided. 
+		\item \textit {host}: server host name. Default value is `localhost'.
+		\item \textit {port}: server port. Default value is 8765. 
+		\item \textit {persistent}: If true, make the workspace persistent. A persistent workspace won't be purged when the owner
+		disconnects from an nws server. Note that only the client who actually takes ownership of the workspace can make 
+		the workspace persistent. The persistent argument is effectively ignored if useUse is true. 
+		\item \textit {useUse}: By default `open' semantic is used when creating a workspace (i.e., trying to claim ownership). 
+		If useUse is set to 1, `use' semantic applies, which means no ownership is claimed.\\
+	\end{itemize}
+	
+	\item {\bf Examples}
+		\begin{verbatim}
+		example 1: create a workspace with default options.
+		>> nws = netWorkSpace(`nws example')
+	
+		example 2: connect to a workspace using useUse semantic.
+		>> opt.useUse = 1
+		>> nws = netWorkSpace(`example2', opt)
+	
+		example 3: create a workspace on an nws server that
+				   resides on node1, port 5555.
+		>> nws = netWorkSpace(`example3', `node1', 5555)
+		\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{fetch}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+fetch
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Fetch a value associates with the variable from the shared netWorkSpace nws.
+	\item {\bf Usage}\\
+	X = fetch(nws, varName);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nws	\hspace{2.5cm} \= a netWorkSpace class object.\\
+		varName	\> name of the variable to fetch.\\
+		\end{tabbing}
+	\item {\bf Details}\\
+	Fetch blocks until a value for varName is found in the shared netWorkSpace nws.
+	Once found, remove a value associated with varName from the shared netWorkSpace and return it in X. 
+	This operation is atomic. If multiple Distributed Computing Toolbox sessions fetch or fetchTry a 
+	given varName, any given value from the set of values associated with varName will be return to 
+	just one DCT session. If there is more than one value associated with varName, the particular value 
+	removed depends on varName's behavior. See declare(nws, ...) for details.
+	
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> nws = netWorkSpace(`nws example');
+		>> store(nws, `x', 1);  % store variable x with value 1 to nws
+		>> X = fetch(nws, `x'); % X = 1
+		>> X = fetch(nws, `x'); % no value for x; block on fetch
+		\end{verbatim}
+\end{list}
+%HEVEA}
+
+%HEVEA\aname{fetchTry}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+fetchTry
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Attempt to fetch a value associates with the variable from the shared netWorkSpace nws; 
+	a non-blocking version of fetch(nws, ...).
+	\item {\bf Usage\\}
+	[X, F] = fetchTry(nws, varName, ifMissing);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nws	\hspace{2.5cm} \= a netWorkSpace class object. \\
+		varName	\> name of variable to fetch. \\
+		ifMissing \> value to return, if variable by varName is not found in netWorkSpace nws.
+		\end{tabbing}
+	\item {\bf Details}\\
+	Look in the shared netWorkSpace nws for a value bound to varName.
+ 
+	If found, remove a value associated with varName from nws and
+	return it in X. Set F to true. This operation is atomic. If
+	multiple DCT sessions fetch or fetchTry a given varName, any
+	given value from the set of values associated with varName will
+	be return to just one DCT session. If there is more than one
+	value associated with varName, the particular value removed
+	depends on varName's behavior. See declare(nws, ...) for details.
+    
+	If not found, return the value of ifMissing in X and set F to false.
+	Default value for ifMissing is zero. 
+
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> nws = netWorkSpace(`nws example');
+		>> store(nws, `x', 1);
+		>> 
+		>> [X, F] = fetchTry(nws, `x'); % X = 1, F = 1
+		>> [X, F] = fetchTry(nws, `x'); % X = 0, F = 0 
+		\end{verbatim}
+\end{list}
+%HEVEA}
+
+%HEVEA\aname{find}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+find
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Find a value associates with the variable in the shared netWorkSpace nws.
+	\item {\bf Usage}\\
+	X = find(nws, varName);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nws	\hspace{2.5cm} \= a netWorkSpace class object. \\
+		varName \> name of the variable to find.
+		\end{tabbing}
+	\item {\bf Details}\\
+	find(nws, varName) blocks until a value for varName is found in the shared netWorkSpace nws.
+    
+	Once found, return in X a value associated with varName, but the value is not removed from
+	netWorkSpce, nws. If there is more than one value associated with varName, 
+	the particular value returned depends on varName's behavior. See declare(nws, ...) for details.
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> nws = netWorkSpace(`nws example');
+		>> store(nws, `x', 1);
+		>> X = find(nws, `x');   % X = 1
+		>> listVars(nws); % X value is not removed from nws
+		\end{verbatim}
+\end{list}
+%HEVEA }
+
+
+%HEVEA\aname{findTry}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+findTry
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Attempt to find a value associates with the variable in the shared netWorkSpace nws;	a non-blocking version of find(nws, ...).
+	\item {\bf Usage\\}
+	[X, F] = findTry(nws, varName, isMissing);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nws \hspace{2.5cm} \=  a netWorkSpace class object.\\
+		varName \> name  of the variable to find.\\
+		isMissing \> value to return if no variable by varName is found in netWorkSpace nws.
+		\end{tabbing}
+	\item {\bf Details}\\
+	$[$X, F$]$ = findTry(nws, varName, isMissing) looks in the nws for a value bound to varName.
+      
+	If found, returns a value associated with varName in X and sets F to true. 
+	No value is removed from netWorkSpace, nws. If there is more than one value associated with 
+	varName, the particular value returned depends on varName's behavior. 
+	See declare(nws, ...) for details.
+      
+	If not found, return the value of isMissing in X and set F to false.
+	Default value for ifMissing is zero. 
+
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> nws = netWorkSpace(`nws example');
+		>> [X, F] = findTry(nws, `x'); % check if variable x exists
+		\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{store}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+store
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Store a value associates with the variable in the netWorkSpace, nws.
+	\item {\bf Usage}\\
+	store(nws, varName, value);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nws \hspace{2.5cm} \= a netWorkSpace class object.\\
+		varName \> variable name.\\
+		value \> value associates with varName to be stored in nws. 
+		\end{tabbing}
+	\item {\bf Details}\\
+	store(nws, varName, v) associates the value v with the
+	variable varName in the shared netWorkSpace nws, thereby making
+	the value available to all the instances of MATLAB running in
+	the current Distributed Computing Toolbox session.  value may be
+	any MATLAB value -- matrix, structure, function handle, etc.
+
+	If a mode has not already been set for varName, `fifo' will be used (see declare(nws, ...)).
+
+	If no variable name is given, then value v must itself be a variable,
+	and the value v will be asssociated with the variable's name in
+	the netWorkSpace nws. See the examples below for details.
+
+	Note that, by default (`fifo' mode), store is not idempotent:
+	repeating store(nws, `X', v) will add additional values to the
+	set of values associated with the name `X'. See the examples below for details.
+
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> M = magic(5); 
+		>> store(nws, M);
+		\end{verbatim}
+		and
+		\begin{verbatim}
+		>> store(nws, `M', magic(5));
+		\end{verbatim}
+		do the same thing. 
+	
+		\begin{verbatim}
+		>> for x = 1:10
+		store(nws, `numList', x);
+		end
+		\end{verbatim}
+	
+		will associated ten distinct values with the name `numList'.
+	
+		\begin{verbatim}
+		>> for i = 1:10
+		fetch(nws, `numList');
+		end
+		\end{verbatim}
+	
+		will retrieve these distinct values, one at a time from the
+		first to last stored.
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{declare}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+declare
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Declare a variable with a particular mode in the shared netWorkSpace.
+	\item {\bf Usage}\\
+	X = declare(nws, varName, mode);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nws	\hspace{2.5cm} \= a netWorkSpace class object.\\
+		varName \> variable name.\\
+		mode \>	variable mode.
+		\end{tabbing}
+	\item {\bf Details}\\
+	If varName has not already been declared in nws, the behavior
+	of varName will be determined by mode. Mode can be `fifo',
+	`lifo', `multi', or `single'. In the first three cases,
+	multiple values can be associated with varName. When a value is
+	retrieved for varName, the oldest value stored will be used in
+	`fifo' mode, the youngest in `lifo' mode, and a
+	nondeterministic choice will be made in `multi' mode. In
+	`single' mode, only the most recent value is retained.
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> nws = netWorkSpace(`nws example');
+		>> declare(nws, `pi', `single');
+		>> store(nws, `pi', 2.171828182);
+		>> store(nws, `pi', 3.141592654);
+		\end{verbatim}
+
+	listVars(nws) will show that only the most recent value of pi is retained.
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{deleteVar}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+deleteVar
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Delete a variable from the shared netWorkSpace.
+	\item {\bf Usage}\\
+	X = deleteVar(nws, varName);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nws \hspace{2.5cm} \= a netWorkSpace class object.\\
+		varName \> variable name of the object to delete.
+		\end{tabbing}
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> nws = netWorkSpace(`nws example');
+		>> store(nws, `x', 1);
+		>> deleteVar(nws, `x');
+		>> listVars(nws); % no variables in nws example 
+		\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{listVars}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+listVars
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	List variables in the netWorkSpace, nws.
+	\item {\bf Usage}\\
+	X = listVars(nws, netWorkSpaceName);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nws \hspace{3.0cm} \= a netWorkSpace class object.\\
+		netWorkSpaceName \> netWorkSpace name.
+		\end{tabbing}
+	\item {\bf Details}\\
+	X = listVars(netWorkSpaceName) returns a struct array listing
+	of variables in the named netWorkSpace. The listing contains number of values,
+	fetchers, finders and mode for each variable. If netWorkSpaceName argument
+        is not provided, then list variables in the netWorkSpace reference by the first argument, nws. 
+     
+	If no left hand side, print a tabular listing.
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> nws = netWorkSpace(`nws example');
+		>> store(nws, `x', 1);
+		>> listVars(nws);
+		\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{currentWs}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+currentWs
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Report the name of a shared netWorkSpace.
+	\item {\bf Usage}\\
+	X = currentWs(nws);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nws	\hspace{2.5cm} \= a netWorkSpace class object.
+		\end{tabbing}
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> nws = netWorkSpace(`nws example');
+		>> wsName = currentWs(nws);
+		>> display(wsName); % wsName = nws example 
+		\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{close}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+close
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Close connection of a shared netWorkSpace to the NetWorkSpaces server. 
+	\item {\bf Usage}\\
+	X = close(nws);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nws \hspace{2.5cm} \= a netWorkSpace class object.
+		\end{tabbing}
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> nws = netWorkSpace(`nws example');
+		>> close(nws);
+		\end{verbatim}
+\end{list}
+%HEVEA }
+
+%HEVEA\aname{server}{
+\rule[0.06in]{6in}{0.01in}
+\newline
+server
+\newline
+\rule{6in}{0.01in}
+\begin{list}{}{}
+	\item {\bf Description}\\
+	Return an instance of the NetWorkSpaces server that the netWorkSpace, nws, connects to.
+	\item {\bf Usage}\\
+	s = server(nws);
+	\item {\bf Arguments}
+		\begin{tabbing}
+		nws \hspace{2.5cm} \= a netWorkSpace class object.
+		\end{tabbing}
+	\item {\bf Examples}
+		\begin{verbatim}
+		>> s = server(nws);
+		\end{verbatim}
+\end{list}
+%HEVEA }
+
