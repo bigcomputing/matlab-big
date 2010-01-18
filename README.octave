@@ -11,7 +11,11 @@ makefile that will be used to build the underlying octave serialization
 mechanisms. Call this by entering:
 $ make -f raw_Makefile
 
-Assuming that octave is in your path, setup is complete.
+Assuming that octave is in your path, the only thing left to do is build
+the normal matlab-big mex file.  Call
+$ mkoctfile --mex nwsMex.c.
+
+Installation and setup are now complete.
 ---------------------------
 % Notes
 - Due to some limitations in octave's support for closures, only one
