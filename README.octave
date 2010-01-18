@@ -1,0 +1,24 @@
+Octave support for matlab-big is experimental, but you may find it
+very useful.  Below are a few pieces of key information:
+--------------------------
+To install and set up matlab-big for octave, you must first run the
+octave.patch.
+$ patch -p0 < octave.patch
+
+This will modify a number of files in your sandbox, as well as adding
+a few. One of the files created will be the raw_Makefile. This is a
+makefile that will be used to build the underlying octave serialization
+mechanisms. Call this by entering:
+$ make -f raw_Makefile
+
+Assuming that octave is in your path, setup is complete.
+---------------------------
+% Notes
+- Due to some limitations in octave's support for closures, only one
+  sleigh should be used at any time. If a new sleigh is created,
+  please ignore the old one.
+- The serialization currently being used for octave is not compatible
+  with Matlab, so they will be unable to communicate through a 
+  NetWorkSpace.
+- You may see additional textual output when using a sleigh, this is
+  normal.
