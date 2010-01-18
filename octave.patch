@@ -1,0 +1,542 @@
+diff --git @sleigh/display.m @sleigh/display.m
+index c5c6222..caf21f7 100644
+--- @sleigh/display.m
++++ @sleigh/display.m
+@@ -17,5 +17,5 @@ function display(s)
+ %
+ 
+ disp('sleigh on nodes:');
+-display(s.nodeList);
+-display(s.nws);
++disp(s.nodeList);
++disp(s.nws);
+diff --git @sleigh/sleigh.m @sleigh/sleigh.m
+index 59a2289..6ce861d 100644
+--- @sleigh/sleigh.m
++++ @sleigh/sleigh.m
+@@ -143,6 +143,9 @@ else
+   error('unknown launch protocol');
+ end
+ 
++s.foo = 0;
++
++disp("Calling class");
+ s = class(s, 'sleigh');
+ end
+ 
+@@ -194,18 +197,22 @@ end
+ % funky or freaky???
+ function h = bxGen(limit)
+ h = @bxStepper;
+-x = 1;
++global lim = limit;
++global bxGenx = 1;
+   function c = bxStepper()
+-  c = x;
+-  x = mod(x,limit) + 1;
++  global bxGenx;
++  global lim;
++  c = bxGenx;
++  bxGenx = mod(bxGenx,lim) + 1;
+   end
+ end
+ 
+ 
+ function h = busyGen()
+ h = @busy;
+-state = 0;
++global state = 0;
+   function x = busy(op)
++    global state;
+     if strcmp(op, 'clear'); state = 0; end
+     if strcmp(op, 'query'); end
+     if strcmp(op, 'set'); state = 1; end
+diff --git bin/MatlabBabelfish bin/MatlabBabelfish
+index 7635228..41db97b 100755
+--- bin/MatlabBabelfish
++++ bin/MatlabBabelfish
+@@ -1,6 +1,6 @@
+ #!/bin/sh
+ 
+-exec ${MATLABPROG:-'matlab'} -nosplash -nodesktop -nodisplay -nojvm <<'EOF' > /dev/null
++exec ${MATLABPROG:-'octave'} -q --eval <<'EOF' > /dev/null
+ nwsPath = getenv('MATLABNWSPATH');
+ if ~isequal(nwsPath, '')
+   addpath(nwsPath);
+diff --git bin/MatlabNWSSleighSession.py bin/MatlabNWSSleighSession.py
+index 5e6174e..0cdc849 100755
+--- bin/MatlabNWSSleighSession.py
++++ bin/MatlabNWSSleighSession.py
+@@ -53,7 +53,8 @@ def main():
+     print nwsName, nwsHost, nwsPort
+ 
+     print "executing Matlab worker"
+-    mprog = Env.get('MatlabProg', 'matlab')
++    #mprog = Env.get('MatlabProg', 'matlab')
++    mprog = 'octave'
+     rcmd = 'cmdLaunch'
+     if nwsPath:
+         if sys.platform.startswith('win'):
+@@ -63,11 +64,9 @@ def main():
+             # setting the MATLABPATH environment variable causes
+             # big problems on Windows, but seems to work on Unix
+             addMatlabPath(nwsPath)
+-    argv = [mprog, '-r', rcmd, '-nodesktop', '-nosplash', '-nojvm']
++    argv = [mprog, '-q', '--eval', rcmd]
+     if sys.platform.startswith('win'):
+         argv += ['-minimize']
+-    else:
+-        argv += ['-nodisplay']
+     if outfile: argv += ['-logfile', outfile]
+     try:
+         # XXX Python 2.4 is currently required for Windows (but not gracefully enforced)
+diff --git cerealize.m cerealize.m
+new file mode 100644
+index 0000000..01d7ae4
+--- /dev/null
++++ cerealize.m
+@@ -0,0 +1,3 @@
++function cereal = cerealize(foo)
++  cereal = rawwrite(foo, "a", 1);
++end
+diff --git decerealize.m decerealize.m
+new file mode 100644
+index 0000000..55b05b9
+--- /dev/null
++++ decerealize.m
+@@ -0,0 +1,3 @@
++function cereal = decerealize(foo)
++  cereal = rawread(foo, 1);
++end
+diff --git nwsMex.c nwsMex.c
+index e4dc1cd..edd786f 100644
+--- nwsMex.c
++++ nwsMex.c
+@@ -75,8 +75,8 @@
+ #define MaxDims                 10
+ 
+ /* these should be declared in mex.h */
+-extern mxArray *mxSerialize();
+-extern mxArray *mxDeserialize();
++//extern mxArray *mxSerialize();
++//extern mxArray *mxDeserialize();
+ 
+ /* protocol: the (four digit) number of args, followed, per arg, by a
+    20-digit len followed by that many bytes of real data. */
+@@ -158,7 +158,7 @@ static mwSize getNumberOfElements(mxClassID cid, int complex, mwSize n)
+ {
+   if (complex) {
+     if ((n & 1) != 0) {
+-      mexWarningMsgTxt("matrix size is not evenly divisible by 2");
++      //mexWarningMsgTxt("matrix size is not evenly divisible by 2");
+       n = 0;
+     }
+     n >>= 1;
+@@ -945,7 +945,12 @@ static void doRetrieve( int nlhs, mxArray *plhs[],
+         if ((desc & BabelMask) != MatlabFP) {
+           mexErrMsgTxt("unable to deserialize object created by another language");
+         }
+-        plhs[0] = mxDeserialize(resultBuf, resultLen);
++	mxArray *arr[1];
++	mxArray *ret[1];
++	arr[0] = mxCreateString(resultBuf);
++	mexCallMATLAB(1,ret,1,arr,"decerealize");
++	plhs[0] = ret[0];
++	//mxDestroyArray(arr);
+       }
+       else
+         mexErrMsgTxt("retrieval of value failed");
+@@ -964,7 +969,12 @@ static void doRetrieve( int nlhs, mxArray *plhs[],
+           mexErrMsgTxt("unable to deserialize object created by another language");
+         }
+         *mxGetLogicals(plhs[1]) = 1;
+-        plhs[0] = mxDeserialize(resultBuf, resultLen);
++	mxArray *arr[1];
++	mxArray *ret[1];
++	arr[0] = mxCreateString(resultBuf);
++	mexCallMATLAB(1,ret,1,arr,"decerealize");
++	plhs[0] = ret[0];
++	//mxDestroyArray(arr);
+       }
+       else {
+         *mxGetLogicals(plhs[1]) = 0;
+@@ -1007,7 +1017,7 @@ static void doStore( int nlhs, mxArray *plhs[],
+       desc |= UnserializedData | StringData;
+     }
+     else if (mxIsSparse(prhs[2])) {
+-      mxErrMsgTxt("raw mode does not support sparse matrices");
++      //mxErrMsgTxt("raw mode does not support sparse matrices");
+     }
+     else {
+       desc |= UnserializedData | BinaryData;
+@@ -1096,11 +1106,17 @@ static void doStore( int nlhs, mxArray *plhs[],
+   }
+   else {
+     /* serialize the value. */
+-    mxArray     *pickle = mxSerialize(prhs[2]);
++    mxArray     *arr[1];
++    mxArray     *ret[1];
++    arr[0] = (mxArray *)prhs[2];
++    mexCallMATLAB(1,ret,1,arr, "cerealize");
++    mxArray     *pickle = ret[0];
+     int         pickleLen = mxGetNumberOfElements(pickle);
+ 
+     sendLB(s, 20, pickleLen, (char *) mxGetData(pickle));
+-    if (pickle) mxDestroyArray(pickle);
++    if (pickle) {
++      mxDestroyArray(pickle);
++    }
+   }
+ 
+   /* read and check status. */
+diff --git octave_serialize/Example octave_serialize/Example
+new file mode 100644
+index 0000000..633ca36
+--- /dev/null
++++ octave_serialize/Example
+@@ -0,0 +1,2 @@
++rawwrite (rand(5), "test");
++x = rawread ("test")
+diff --git octave_serialize/Makefile octave_serialize/Makefile
+new file mode 100644
+index 0000000..2f2eb21
+--- /dev/null
++++ octave_serialize/Makefile
+@@ -0,0 +1,8 @@
++
++ov-pointer: 
++	g++ mxSerialize.cpp -I/home/pashields/sw/octave-3.2.3/src/ -c -fPIC -o mxSerialize.o
++	g++ mxSerialize.o -shared -W1,-soname,libmx.so -o libmx.so -lc
++
++
++clean: 
++	rm -f *.o *.oct *.mex *.so
+diff --git octave_serialize/cpp_c.c octave_serialize/cpp_c.c
+new file mode 100644
+index 0000000..3f04884
+--- /dev/null
++++ octave_serialize/cpp_c.c
+@@ -0,0 +1,12 @@
++#include <stdio.h>
++#include <stdlib.h>
++#include "mx.h"
++
++/*
++ * 
++ */
++int main(int argc, char** argv) {
++  char *s;
++  s = mxDeserialize(argv[0]);
++  return (s);
++}
+diff --git octave_serialize/mx.h octave_serialize/mx.h
+new file mode 100644
+index 0000000..cc290a9
+--- /dev/null
++++ octave_serialize/mx.h
+@@ -0,0 +1,9 @@
++#ifdef __cplusplus
++extern "C" {
++#endif
++  char* mxSerialize(void* vov);
++  char* mxDeserialize(char* s);
++#ifdef __cplusplus
++};
++#endif
++
+diff --git octave_serialize/mxDeserialize.cpp octave_serialize/mxDeserialize.cpp
+new file mode 100644
+index 0000000..be6ca1b
+--- /dev/null
++++ octave_serialize/mxDeserialize.cpp
+@@ -0,0 +1,36 @@
++#include <octave/oct.h>
++#include <octave/ov-re-mat.h>
++#include <octave/ov-scalar.h>
++#include <octave/ops.h>
++#include <octave/ov-typeinfo.h>
++#include <octave/ls-oct-ascii.h>
++#include <octave/ls-oct-binary.h>
++#include <octave/defun-dld.h>
++
++#include <string>
++#include <iostream>
++#include <fstream>
++#include <sstream>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <unistd.h>
++#include <sys/sysinfo.h>
++
++#include "mx.h"
++
++using namespace std;
++
++char* mxdeSerialize(char* s) {
++  octave_value rov;
++  bool b = false;
++  string stri;
++  string ov(s);
++  char *rs;
++  istringstream fs (istringstream::in);
++
++  rov = read_ascii_data (fs, ov, b, rov, 1);
++  stri = rov.string_value();
++  strcpy(rs, stri.c_str());
++
++  return rs;
++}
+diff --git octave_serialize/mxSerialize.cpp octave_serialize/mxSerialize.cpp
+new file mode 100644
+index 0000000..40019db
+--- /dev/null
++++ octave_serialize/mxSerialize.cpp
+@@ -0,0 +1,52 @@
++#include <octave/oct.h>
++#include <octave/ov-re-mat.h>
++#include <octave/ov-scalar.h>
++#include <octave/ops.h>
++#include <octave/ov-typeinfo.h>
++#include <octave/ls-oct-ascii.h>
++#include <octave/ls-oct-binary.h>
++#include <octave/defun-dld.h>
++
++#include <string>
++#include <iostream>
++#include <fstream>
++#include <sstream>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <unistd.h>
++#include <sys/sysinfo.h>
++
++#include "mx.h"
++
++using namespace std;
++
++char* mxSerialize(void* vov) {
++  octave_value ov;
++  octave_value rov;
++  string srov;
++  char *csrov;
++  ostringstream fs (ostringstream::out);
++
++  ov = static_cast<octave_value>(vov);
++
++  rov = save_ascii_data (fs, ov, "OCTAVE_RAW", false, 17);
++
++  srov = rov.string_value();
++  strcpy(csrov, srov.c_str());
++  return csrov;
++}
++
++char* mxDeserialize(char* s) {
++  octave_value rov;
++  bool b = false;
++  string stri;
++  string ov(s);
++  char *rs;
++  istringstream fs (istringstream::in);
++
++  rov = read_ascii_data (fs, ov, b, rov, 1);
++  stri = rov.string_value();
++  strcpy(rs, stri.c_str());
++
++  return rs;
++}
+diff --git octave_serialize/ov-serialize.cc octave_serialize/ov-serialize.cc
+new file mode 100644
+index 0000000..bbbe238
+--- /dev/null
++++ octave_serialize/ov-serialize.cc
+@@ -0,0 +1,85 @@
++#include <octave/oct.h>
++#include <octave/ov-re-mat.h>
++#include <octave/ov-scalar.h>
++#include <octave/ops.h>
++#include <octave/ov-typeinfo.h>
++#include <octave/ls-oct-ascii.h>
++#include <octave/ls-oct-binary.h>
++#include <octave/defun-dld.h>
++
++#include <string>
++#include <iostream>
++#include <fstream>
++#include <sstream>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <unistd.h>
++#include <sys/sysinfo.h>
++
++using namespace std;
++
++DEFUN_DLD (rawread, args,, "value = rawread (filename [, format])\n \
++		 \n")
++{
++  int l = -1;
++  bool b = false;
++  int format = 0;
++  octave_value ov;
++  octave_value_list r;
++  string doc;
++
++  if (args.length () < 1)
++    {
++      print_usage ();
++      r (0) = -1;
++      return r;
++    }
++  if (args.length () > 1)
++    format = args (1).int_value ();
++  oct_mach_info::float_format fmt = oct_mach_info::native_float_format ();
++  string s = args (0).string_value ();
++  istringstream fs (s, istringstream::in);
++  //fs.open (s.c_str ());
++  r (0) = -1;
++
++  if (format)
++    read_ascii_data (fs, s, b, ov, 1);
++  else
++    read_binary_data (fs, b, fmt, std::string (), b, ov, doc);
++
++  //fs.close ();
++  r (0) = ov;
++  return r;
++}
++
++
++DEFUN_DLD (rawwrite, args,, "success = rawwrite (A, filename [, format])\n \
++		 \n")
++{
++  int l = -1, format = 0;
++  bool b = false;
++  const string name = "OCTAVE_RAW";
++  octave_value_list r;
++  ostringstream fs (ostringstream::out);
++
++  if (args.length () < 2)
++    {
++      print_usage ();
++      r (0) = -1;
++      return r;
++    }
++  if (args.length () > 2)
++    format = args (2).int_value ();
++  octave_value ov = args (0);
++  string s = args (1).string_value ();
++  //fs.open (s.c_str ());
++
++  r (0) = -1;
++  if (format)
++    r (0) = save_ascii_data (fs, ov, name, b, 17);
++  else
++    r (0) = save_binary_data (fs, ov, name, "", false, false);
++
++  r (0) = octave_value(fs.str());
++  return r;
++}
+diff --git ov-serialize.cc ov-serialize.cc
+new file mode 100644
+index 0000000..bbbe238
+--- /dev/null
++++ ov-serialize.cc
+@@ -0,0 +1,85 @@
++#include <octave/oct.h>
++#include <octave/ov-re-mat.h>
++#include <octave/ov-scalar.h>
++#include <octave/ops.h>
++#include <octave/ov-typeinfo.h>
++#include <octave/ls-oct-ascii.h>
++#include <octave/ls-oct-binary.h>
++#include <octave/defun-dld.h>
++
++#include <string>
++#include <iostream>
++#include <fstream>
++#include <sstream>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <unistd.h>
++#include <sys/sysinfo.h>
++
++using namespace std;
++
++DEFUN_DLD (rawread, args,, "value = rawread (filename [, format])\n \
++		 \n")
++{
++  int l = -1;
++  bool b = false;
++  int format = 0;
++  octave_value ov;
++  octave_value_list r;
++  string doc;
++
++  if (args.length () < 1)
++    {
++      print_usage ();
++      r (0) = -1;
++      return r;
++    }
++  if (args.length () > 1)
++    format = args (1).int_value ();
++  oct_mach_info::float_format fmt = oct_mach_info::native_float_format ();
++  string s = args (0).string_value ();
++  istringstream fs (s, istringstream::in);
++  //fs.open (s.c_str ());
++  r (0) = -1;
++
++  if (format)
++    read_ascii_data (fs, s, b, ov, 1);
++  else
++    read_binary_data (fs, b, fmt, std::string (), b, ov, doc);
++
++  //fs.close ();
++  r (0) = ov;
++  return r;
++}
++
++
++DEFUN_DLD (rawwrite, args,, "success = rawwrite (A, filename [, format])\n \
++		 \n")
++{
++  int l = -1, format = 0;
++  bool b = false;
++  const string name = "OCTAVE_RAW";
++  octave_value_list r;
++  ostringstream fs (ostringstream::out);
++
++  if (args.length () < 2)
++    {
++      print_usage ();
++      r (0) = -1;
++      return r;
++    }
++  if (args.length () > 2)
++    format = args (2).int_value ();
++  octave_value ov = args (0);
++  string s = args (1).string_value ();
++  //fs.open (s.c_str ());
++
++  r (0) = -1;
++  if (format)
++    r (0) = save_ascii_data (fs, ov, name, b, 17);
++  else
++    r (0) = save_binary_data (fs, ov, name, "", false, false);
++
++  r (0) = octave_value(fs.str());
++  return r;
++}
+diff --git raw_Makefile raw_Makefile
+new file mode 100644
+index 0000000..93fa8d1
+--- /dev/null
++++ raw_Makefile
+@@ -0,0 +1,8 @@
++
++ov-pointer: 
++	mkoctfile -I. ov-serialize.cc  
++	f=`cat ov-serialize.cc | grep DEFUN_DLD | sed -e "s/DEFUN_DLD(//" | sed -e "s/DEFUN_DLD (//" | sed -e "s/,.*//g"`; \
++    for x in $${f}; do ln -sf ov-serialize.oct $${x}.oct 2>/dev/null; done
++
++clean: 
++	rm -f *.o *.oct
